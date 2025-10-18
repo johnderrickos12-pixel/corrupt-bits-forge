@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,10 +7,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is already logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        navigate("/dashboard");
+      }
+    });
+  }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -18,14 +28,20 @@ const Auth = () => {
     
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
     
-    // Simulate auth
-    setTimeout(() => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      toast.error(error.message);
       setIsLoading(false);
-      toast.success("Welcome back! Redirecting to dashboard...");
-      localStorage.setItem("corrupt_user", email);
+    } else {
+      toast.success("Welcome back! Redirecting...");
       setTimeout(() => navigate("/dashboard"), 1000);
-    }, 1500);
+    }
   };
 
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -34,15 +50,30 @@ const Auth = () => {
     
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
-    
-    // Simulate signup
-    setTimeout(() => {
+    const password = formData.get("password") as string;
+    const confirm = formData.get("confirm") as string;
+
+    if (password !== confirm) {
+      toast.error("Passwords don't match");
       setIsLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+
+    if (error) {
+      toast.error(error.message);
+      setIsLoading(false);
+    } else {
       toast.success("Account created! 1M tokens added. Redirecting...");
-      localStorage.setItem("corrupt_user", email);
-      localStorage.setItem("corrupt_tokens", "1000000");
       setTimeout(() => navigate("/dashboard"), 1000);
-    }, 1500);
+    }
   };
 
   return (
@@ -126,6 +157,7 @@ const Auth = () => {
                   type="password"
                   placeholder="••••••••"
                   required
+                  minLength={6}
                   className="border-primary/30"
                 />
               </div>
@@ -138,6 +170,7 @@ const Auth = () => {
                   type="password"
                   placeholder="••••••••"
                   required
+                  minLength={6}
                   className="border-primary/30"
                 />
               </div>

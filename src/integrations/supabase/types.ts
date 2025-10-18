@@ -14,7 +14,232 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      docs_comments: {
+        Row: {
+          comment_text: string
+          created_at: string
+          id: string
+          is_approved: boolean
+          section_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment_text: string
+          created_at?: string
+          id?: string
+          is_approved?: boolean
+          section_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment_text?: string
+          created_at?: string
+          id?: string
+          is_approved?: boolean
+          section_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "docs_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      premium_keys: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_used: boolean
+          key_code: string
+          plan: Database["public"]["Enums"]["plan_type"]
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_used?: boolean
+          key_code: string
+          plan: Database["public"]["Enums"]["plan_type"]
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_used?: boolean
+          key_code?: string
+          plan?: Database["public"]["Enums"]["plan_type"]
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "premium_keys_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "premium_keys_used_by_fkey"
+            columns: ["used_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string
+          id: string
+          is_admin: boolean
+          is_owner: boolean
+          plan: Database["public"]["Enums"]["plan_type"]
+          selected_character: string | null
+          token_balance: number
+          token_consumed: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email: string
+          id: string
+          is_admin?: boolean
+          is_owner?: boolean
+          plan?: Database["public"]["Enums"]["plan_type"]
+          selected_character?: string | null
+          token_balance?: number
+          token_consumed?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string
+          id?: string
+          is_admin?: boolean
+          is_owner?: boolean
+          plan?: Database["public"]["Enums"]["plan_type"]
+          selected_character?: string | null
+          token_balance?: number
+          token_consumed?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      project_collaborators: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_collaborators_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_collaborators_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          created_at: string
+          custom_domain: string | null
+          database_url: string | null
+          deploy_status: Database["public"]["Enums"]["deploy_status_type"]
+          description: string | null
+          environment: Database["public"]["Enums"]["environment_type"]
+          github_repo: string | null
+          id: string
+          mode: Database["public"]["Enums"]["mode_type"]
+          name: string
+          resource_limits: Json | null
+          security_scan_status: Database["public"]["Enums"]["security_scan_status_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          custom_domain?: string | null
+          database_url?: string | null
+          deploy_status?: Database["public"]["Enums"]["deploy_status_type"]
+          description?: string | null
+          environment?: Database["public"]["Enums"]["environment_type"]
+          github_repo?: string | null
+          id?: string
+          mode?: Database["public"]["Enums"]["mode_type"]
+          name: string
+          resource_limits?: Json | null
+          security_scan_status?: Database["public"]["Enums"]["security_scan_status_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          custom_domain?: string | null
+          database_url?: string | null
+          deploy_status?: Database["public"]["Enums"]["deploy_status_type"]
+          description?: string | null
+          environment?: Database["public"]["Enums"]["environment_type"]
+          github_repo?: string | null
+          id?: string
+          mode?: Database["public"]["Enums"]["mode_type"]
+          name?: string
+          resource_limits?: Json | null
+          security_scan_status?: Database["public"]["Enums"]["security_scan_status_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +248,11 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      deploy_status_type: "pending" | "live" | "error" | "archived"
+      environment_type: "dev" | "staging" | "prod"
+      mode_type: "chat" | "agent"
+      plan_type: "free" | "premium" | "ultra"
+      security_scan_status_type: "not_run" | "safe" | "issues_found"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +379,12 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      deploy_status_type: ["pending", "live", "error", "archived"],
+      environment_type: ["dev", "staging", "prod"],
+      mode_type: ["chat", "agent"],
+      plan_type: ["free", "premium", "ultra"],
+      security_scan_status_type: ["not_run", "safe", "issues_found"],
+    },
   },
 } as const

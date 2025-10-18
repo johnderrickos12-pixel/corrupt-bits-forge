@@ -1,28 +1,90 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Sparkles, BookOpen, Code2, Zap, MessageSquare } from "lucide-react";
+import { Sparkles, BookOpen, Code2, Zap, MessageSquare, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Comment {
+  id: string;
+  user_id: string;
+  comment_text: string;
+  created_at: string;
+  profiles: {
+    email: string;
+  };
+}
 
 const Docs = () => {
   const [comment, setComment] = useState("");
-  const [comments, setComments] = useState<Array<{ user: string; text: string; time: string }>>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const handleAddComment = () => {
-    if (!comment.trim()) return;
-    
-    const user = localStorage.getItem("corrupt_user") || "Anonymous";
-    const newComment = {
-      user,
-      text: comment,
-      time: new Date().toLocaleString(),
-    };
-    
-    setComments([newComment, ...comments]);
-    setComment("");
-    toast.success("Comment added!");
+  useEffect(() => {
+    loadComments();
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setIsAuthenticated(!!session);
+  };
+
+  const loadComments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('docs_comments')
+        .select(`
+          *,
+          profiles (email)
+        `)
+        .eq('section_id', 'general')
+        .eq('is_approved', true)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+      setComments(data || []);
+    } catch (error: any) {
+      console.error('Error loading comments:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!comment.trim()) {
+      toast.error("Comment cannot be empty");
+      return;
+    }
+
+    if (!isAuthenticated) {
+      toast.error("Please login to comment");
+      return;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const { error } = await supabase
+        .from('docs_comments')
+        .insert({
+          user_id: session.user.id,
+          section_id: 'general',
+          comment_text: comment,
+        });
+
+      if (error) throw error;
+
+      toast.success("Comment added!");
+      setComment("");
+      await loadComments();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
   };
 
   return (
@@ -173,38 +235,59 @@ Access the admin panel from your dashboard if you have privileges.
             Community Comments
           </h2>
 
-          <div className="space-y-4 mb-6">
-            {comments.map((c, i) => (
-              <div key={i} className="p-4 bg-card/50 rounded-lg border border-border">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="font-semibold text-sm text-primary">{c.user}</span>
-                  <span className="text-xs text-muted-foreground">{c.time}</span>
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="space-y-4 mb-6">
+              {comments.map((c) => (
+                <div key={c.id} className="p-4 bg-card/50 rounded-lg border border-border">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="font-semibold text-sm text-primary">{c.profiles.email}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(c.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <p className="text-sm">{c.comment_text}</p>
                 </div>
-                <p className="text-sm">{c.text}</p>
-              </div>
-            ))}
-            
-            {comments.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">
-                No comments yet. Be the first to comment!
-              </p>
-            )}
-          </div>
+              ))}
+              
+              {comments.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">
+                  No comments yet. Be the first to comment!
+                </p>
+              )}
+            </div>
+          )}
 
-          <div className="space-y-3">
-            <Textarea
-              placeholder="Add a comment to the docs..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              className="min-h-[100px] border-accent/30"
-            />
-            <Button
-              onClick={handleAddComment}
-              className="w-full bg-accent hover:bg-accent/90 font-sans"
-            >
-              Post Comment
-            </Button>
-          </div>
+          {isAuthenticated ? (
+            <div className="space-y-3">
+              <Textarea
+                placeholder="Add a comment to the docs..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                className="min-h-[100px] border-accent/30"
+              />
+              <Button
+                onClick={handleAddComment}
+                className="w-full bg-accent hover:bg-accent/90 font-sans"
+              >
+                Post Comment
+              </Button>
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-muted-foreground mb-4">Please login to add comments</p>
+              <Button
+                onClick={() => window.location.href = '/auth'}
+                variant="outline"
+                className="border-accent"
+              >
+                Go to Login
+              </Button>
+            </div>
+          )}
         </Card>
       </div>
     </div>
