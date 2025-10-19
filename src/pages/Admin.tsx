@@ -39,6 +39,22 @@ const Admin = () => {
         return;
       }
 
+      // Check if user has admin role
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id);
+
+      if (rolesError) throw rolesError;
+
+      const hasAdminRole = rolesData?.some(r => r.role === 'admin');
+      
+      if (!hasAdminRole) {
+        toast.error("Access denied: Admin privileges required");
+        navigate("/dashboard");
+        return;
+      }
+
       // Load profile
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -47,14 +63,6 @@ const Admin = () => {
         .single();
 
       if (profileError) throw profileError;
-
-      // Check if user is admin/owner
-      if (!profileData.is_admin && !profileData.is_owner) {
-        toast.error("Access denied: Admin privileges required");
-        navigate("/dashboard");
-        return;
-      }
-
       setProfile(profileData);
 
       // Load stats
@@ -175,14 +183,37 @@ const Admin = () => {
     }
 
     try {
-      const { error } = await supabase
+      // Find user by email
+      const { data: userData } = await supabase
         .from('profiles')
-        .update({ is_admin: true })
-        .eq('email', grantEmail);
+        .select('id')
+        .eq('email', grantEmail)
+        .single();
 
-      if (error) throw error;
+      if (!userData) {
+        toast.error("User not found");
+        return;
+      }
 
-      toast.success(`Admin privileges granted to ${grantEmail}`);
+      // Grant admin role
+      const { error } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: userData.id,
+          role: 'admin'
+        });
+
+      if (error) {
+        // Handle duplicate key error gracefully
+        if (error.code === '23505') {
+          toast.info("User already has admin role");
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success(`Admin privileges granted to ${grantEmail}`);
+      }
+
       setGrantEmail("");
     } catch (error: any) {
       toast.error(error.message);

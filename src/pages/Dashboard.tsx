@@ -17,6 +17,7 @@ interface Profile {
   plan: string;
   is_admin: boolean;
   is_owner: boolean;
+  has_admin_role?: boolean;
 }
 
 interface Project {
@@ -55,7 +56,16 @@ const Dashboard = () => {
         .single();
 
       if (profileError) throw profileError;
-      setProfile(profileData);
+
+      // Check if user has admin role
+      const { data: rolesData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id);
+
+      const hasAdminRole = rolesData?.some(r => r.role === 'admin') || false;
+      
+      setProfile({ ...profileData, has_admin_role: hasAdminRole });
 
       // Load projects
       const { data: projectsData, error: projectsError } = await supabase
@@ -93,18 +103,38 @@ const Dashboard = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
-      const { error } = await supabase
+      // Create project
+      const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .insert({
           user_id: session.user.id,
           name,
           description,
           deploy_status: 'pending'
-        });
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (projectError) throw projectError;
 
-      toast.success("Project created! Starting code generation...");
+      toast.success("Project created! Generating code...");
+
+      // Trigger code generation
+      const { data: codeGenData, error: codeGenError } = await supabase.functions.invoke('generate-code', {
+        body: { 
+          project_id: projectData.id,
+          prompt: description 
+        }
+      });
+
+      if (codeGenError) {
+        toast.error("Code generation failed: " + codeGenError.message);
+      } else if (codeGenData?.error) {
+        toast.error(codeGenData.error);
+      } else {
+        toast.success("Code generated successfully! 🎉");
+      }
+
       await loadUserData();
       
       // Close dialog
@@ -118,6 +148,38 @@ const Dashboard = () => {
       toast.error(error.message);
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleRedeemKey = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const keyCode = formData.get("key_code") as string;
+
+    try {
+      const { data, error } = await supabase.rpc('redeem_premium_key', {
+        _key_code: keyCode
+      });
+
+      if (error) throw error;
+
+      const result = data as { success: boolean; message: string; plan?: string };
+
+      if (result?.success) {
+        toast.success(result.message);
+        await loadUserData();
+        
+        // Close dialog
+        const dialog = document.querySelector('[role="dialog"]');
+        if (dialog) {
+          const closeButton = dialog.querySelector('[aria-label="Close"]') as HTMLButtonElement;
+          closeButton?.click();
+        }
+      } else {
+        toast.error(result?.message || "Failed to redeem key");
+      }
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
@@ -148,7 +210,7 @@ const Dashboard = () => {
           </div>
           
           <div className="flex gap-2">
-            {(profile.is_admin || profile.is_owner) && (
+            {profile.has_admin_role && (
               <Button
                 variant="outline"
                 onClick={() => navigate("/admin")}
@@ -262,15 +324,44 @@ const Dashboard = () => {
               </DialogContent>
             </Dialog>
 
-            <Button
-              size="lg"
-              variant="outline"
-              className="w-full h-24 text-lg border-2 border-secondary hover:bg-secondary/10 font-sans"
-              onClick={() => navigate("/premium")}
-            >
-              <Crown className="w-6 h-6 mr-3" />
-              Upgrade to Premium
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full h-24 text-lg border-2 border-secondary hover:bg-secondary/10 font-sans"
+                >
+                  <Crown className="w-6 h-6 mr-3" />
+                  Redeem Premium Key
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-card border-2 border-secondary/30">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-sans">Redeem Premium Key</DialogTitle>
+                  <DialogDescription>
+                    Enter your premium or ultra key code to upgrade your account
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleRedeemKey} className="space-y-4">
+                  <div>
+                    <Label htmlFor="key_code">Key Code</Label>
+                    <Input
+                      id="key_code"
+                      name="key_code"
+                      placeholder="PREMIUM-XXXX-XXXX-XXXX"
+                      required
+                      className="mt-2 font-mono"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full bg-secondary hover:bg-secondary/90"
+                  >
+                    Redeem Key
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
 
             <Button
               size="lg"
