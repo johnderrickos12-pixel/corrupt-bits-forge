@@ -85,22 +85,29 @@ serve(async (req) => {
 
     console.log('Calling Venice AI with prompt:', prompt);
 
-    const modelId = 'dolphin-mistral-24b-venice-edition';
-    const veniceResponse = await fetch(`https://api.venice.ai/v1/models/${modelId}/generate`, {
+    const veniceResponse = await fetch('https://api.venice.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${veniceApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        prompt: profile.selected_character
-          ? `You are ${profile.selected_character}. Respond to code generation requests in character while providing high-quality, production-ready code.\n\nUser request: ${prompt}`
-          : `You are an expert full-stack developer. Generate clean, production-ready code based on user requirements.\n\nUser request: ${prompt}`,
-        max_tokens: 4096,
+        model: 'dolphin-mistral-24b-venice-edition',
+        messages: [
+          {
+            role: 'system',
+            content: profile.selected_character
+              ? `You are ${profile.selected_character}. Respond to code generation requests in character while providing high-quality, production-ready code.`
+              : 'You are an expert full-stack developer. Generate clean, production-ready code based on user requirements.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
         temperature: 0.7,
         top_p: 0.9,
-        presence_penalty: 0.6,
-        frequency_penalty: 0.5
+        max_tokens: 4096
       }),
     });
 
@@ -114,7 +121,7 @@ serve(async (req) => {
     }
 
     const veniceData = await veniceResponse.json();
-    const generatedCode = veniceData.text || '';
+    const generatedCode = veniceData.choices?.[0]?.message?.content || '';
     
     // Calculate actual token usage
     const tokensUsed = veniceData.usage?.total_tokens || estimatedCost;
