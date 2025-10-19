@@ -92,7 +92,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'dolphin-mistral-24b-venice-edition',
+        model: 'llama-3.3-70b',
         messages: [
           {
             role: 'system',
@@ -106,7 +106,6 @@ serve(async (req) => {
           }
         ],
         temperature: 0.7,
-        top_p: 0.9,
         max_tokens: 4096
       }),
     });
