@@ -74,25 +74,25 @@ serve(async (req) => {
       );
     }
 
-    // Call Venice AI API
-    const veniceApiKey = Deno.env.get('VENICE_AI_API_KEY');
-    if (!veniceApiKey) {
+    // Call Lovable AI Gateway (Gemini 2.5 Pro)
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
       return new Response(
-        JSON.stringify({ error: 'Venice AI API key not configured' }),
+        JSON.stringify({ error: 'Lovable AI API key not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Calling Venice AI with prompt:', prompt);
+    console.log('Calling Lovable AI with prompt:', prompt);
 
-    const veniceResponse = await fetch('https://api.venice.ai/api/v1/chat/completions', {
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${veniceApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b',
+        model: 'google/gemini-2.5-pro',
         messages: [
           {
             role: 'system',
@@ -110,20 +110,35 @@ serve(async (req) => {
       }),
     });
 
-    if (!veniceResponse.ok) {
-      const errorText = await veniceResponse.text();
-      console.error('Venice AI error:', veniceResponse.status, errorText);
+    if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error('Lovable AI error:', aiResponse.status, errorText);
+      
+      if (aiResponse.status === 429) {
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      if (aiResponse.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'Payment required. Please add credits to your Lovable AI workspace.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       return new Response(
-        JSON.stringify({ error: 'Venice AI request failed', details: errorText }),
+        JSON.stringify({ error: 'AI request failed', details: errorText }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const veniceData = await veniceResponse.json();
-    const generatedCode = veniceData.choices?.[0]?.message?.content || '';
+    const aiData = await aiResponse.json();
+    const generatedCode = aiData.choices?.[0]?.message?.content || '';
     
     // Calculate actual token usage
-    const tokensUsed = veniceData.usage?.total_tokens || estimatedCost;
+    const tokensUsed = aiData.usage?.total_tokens || estimatedCost;
 
     // Update user tokens - fetch current value first to increment properly
     const { data: currentProfile } = await supabase
