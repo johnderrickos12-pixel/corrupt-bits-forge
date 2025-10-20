@@ -165,7 +165,8 @@ serve(async (req) => {
         .from('projects')
         .update({
           updated_at: new Date().toISOString(),
-          deploy_status: 'live'
+          deploy_status: 'live',
+          generated_code: generatedCode
         })
         .eq('id', projectId)
         .eq('user_id', user.id);

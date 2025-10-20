@@ -26,6 +26,7 @@ interface Project {
   description: string;
   deploy_status: string;
   created_at: string;
+  generated_code?: string;
 }
 
 const Dashboard = () => {
@@ -420,25 +421,95 @@ const Dashboard = () => {
             </h2>
             <div className="space-y-3">
               {projects.map((project, index) => (
-                <div
-                  key={project.id}
-                  className="p-4 bg-card/50 rounded-lg border border-border hover:border-primary transition-all duration-300 hover:scale-102 hover:shadow-neon cursor-pointer backdrop-blur-sm animate-fade-in"
-                  style={{ animationDelay: `${0.6 + index * 0.1}s` }}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-bold text-lg hover:text-primary transition-colors">{project.name}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">{project.description}</p>
+                <Dialog key={project.id}>
+                  <DialogTrigger asChild>
+                    <div
+                      className="p-4 bg-card/50 rounded-lg border border-border hover:border-primary transition-all duration-300 hover:scale-102 hover:shadow-neon cursor-pointer backdrop-blur-sm animate-fade-in"
+                      style={{ animationDelay: `${0.6 + index * 0.1}s` }}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-bold text-lg hover:text-primary transition-colors">{project.name}</h3>
+                          <p className="text-sm text-muted-foreground mt-1">{project.description}</p>
+                        </div>
+                        <span className={`text-xs px-3 py-1 rounded-full font-semibold transition-all ${
+                          project.deploy_status === 'live' ? 'bg-secondary/20 text-secondary border border-secondary/30 animate-neon-pulse' :
+                          project.deploy_status === 'error' ? 'bg-destructive/20 text-destructive border border-destructive/30' :
+                          'bg-muted text-muted-foreground border border-border'
+                        }`}>
+                          {project.deploy_status}
+                        </span>
+                      </div>
                     </div>
-                    <span className={`text-xs px-3 py-1 rounded-full font-semibold transition-all ${
-                      project.deploy_status === 'live' ? 'bg-secondary/20 text-secondary border border-secondary/30 animate-neon-pulse' :
-                      project.deploy_status === 'error' ? 'bg-destructive/20 text-destructive border border-destructive/30' :
-                      'bg-muted text-muted-foreground border border-border'
-                    }`}>
-                      {project.deploy_status}
-                    </span>
-                  </div>
-                </div>
+                  </DialogTrigger>
+                  <DialogContent className="bg-card border-2 border-primary/30 max-w-4xl max-h-[80vh]">
+                    <DialogHeader>
+                      <DialogTitle className="text-2xl font-sans">{project.name}</DialogTitle>
+                      <DialogDescription>
+                        Project Details and Generated Code
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 overflow-y-auto">
+                      <div>
+                        <Label className="text-sm font-semibold">Description</Label>
+                        <p className="text-sm text-muted-foreground mt-1">{project.description}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-semibold">Status</Label>
+                        <p className={`text-sm mt-1 ${
+                          project.deploy_status === 'live' ? 'text-secondary' :
+                          project.deploy_status === 'error' ? 'text-destructive' :
+                          'text-muted-foreground'
+                        }`}>
+                          {project.deploy_status}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-semibold">Created</Label>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {new Date(project.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      {project.generated_code && (
+                        <div>
+                          <Label className="text-sm font-semibold">Generated Code</Label>
+                          <div className="mt-2 p-4 bg-background/50 rounded-lg border border-border overflow-x-auto">
+                            <pre className="text-xs text-foreground whitespace-pre-wrap font-mono">
+                              {project.generated_code}
+                            </pre>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="mt-2"
+                            onClick={() => {
+                              navigator.clipboard.writeText(project.generated_code || '');
+                              toast.success("Code copied to clipboard!");
+                            }}
+                          >
+                            Copy Code
+                          </Button>
+                        </div>
+                      )}
+                      {!project.generated_code && project.deploy_status === 'pending' && (
+                        <div className="p-4 bg-muted/50 rounded-lg border border-border">
+                          <p className="text-sm text-muted-foreground">
+                            Code is still being generated. Please wait...
+                          </p>
+                        </div>
+                      )}
+                      <div className="flex gap-2 pt-4">
+                        <Button
+                          className="flex-1 bg-primary hover:bg-primary/90"
+                          onClick={() => toast.info("Sandbox feature coming soon!")}
+                        >
+                          <Code2 className="w-4 h-4 mr-2" />
+                          Open in Sandbox
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               ))}
             </div>
           </Card>

@@ -189,6 +189,7 @@ export type Database = {
           deploy_status: Database["public"]["Enums"]["deploy_status_type"]
           description: string | null
           environment: Database["public"]["Enums"]["environment_type"]
+          generated_code: string | null
           github_repo: string | null
           id: string
           mode: Database["public"]["Enums"]["mode_type"]
@@ -205,6 +206,7 @@ export type Database = {
           deploy_status?: Database["public"]["Enums"]["deploy_status_type"]
           description?: string | null
           environment?: Database["public"]["Enums"]["environment_type"]
+          generated_code?: string | null
           github_repo?: string | null
           id?: string
           mode?: Database["public"]["Enums"]["mode_type"]
@@ -221,6 +223,7 @@ export type Database = {
           deploy_status?: Database["public"]["Enums"]["deploy_status_type"]
           description?: string | null
           environment?: Database["public"]["Enums"]["environment_type"]
+          generated_code?: string | null
           github_repo?: string | null
           id?: string
           mode?: Database["public"]["Enums"]["mode_type"]
