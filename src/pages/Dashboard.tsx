@@ -194,19 +194,30 @@ const Dashboard = () => {
   if (!profile) return null;
 
   return (
-    <div className="min-h-screen p-6">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/80 to-background" />
+    <div className="min-h-screen p-6 overflow-hidden">
+      {/* Animated Background Layers */}
+      <div className="fixed inset-0 bg-gradient-to-br from-background via-background/90 to-background z-0" />
+      <div className="fixed inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-secondary/5 animate-float z-0" />
+      
+      {/* Floating Particles */}
+      <div className="fixed inset-0 z-0">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '0s' }} />
+        <div className="absolute top-1/2 right-1/4 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-accent/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+      </div>
       
       <div className="relative z-10 max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-8 animate-fade-in">
           <div>
-            <h1 className="text-4xl font-bold font-sans mb-2">
-              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <h1 className="text-5xl font-bold font-sans mb-2 hover:animate-glitch">
+              <span className="bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent animate-neon-pulse">
                 Dashboard
               </span>
             </h1>
-            <p className="text-muted-foreground">Welcome back, {profile.email}</p>
+            <p className="text-muted-foreground animate-fade-in" style={{ animationDelay: '0.2s' }}>
+              Welcome back, <span className="text-primary">{profile.email}</span>
+            </p>
           </div>
           
           <div className="flex gap-2">
@@ -214,17 +225,25 @@ const Dashboard = () => {
               <Button
                 variant="outline"
                 onClick={() => navigate("/admin")}
-                className="border-accent hover:bg-accent/10"
+                className="border-accent hover:bg-accent/20 hover:border-accent/50 transition-all hover:scale-105 hover:shadow-glow"
               >
                 <Crown className="w-4 h-4 mr-2" />
                 Admin Panel
               </Button>
             )}
-            <Button variant="outline" onClick={() => navigate("/docs")}>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate("/docs")}
+              className="hover:scale-105 transition-all hover:shadow-neon"
+            >
               <Sparkles className="w-4 h-4 mr-2" />
               Docs
             </Button>
-            <Button variant="outline" onClick={handleLogout}>
+            <Button 
+              variant="outline" 
+              onClick={handleLogout}
+              className="hover:scale-105 transition-all"
+            >
               <LogOut className="w-4 h-4 mr-2" />
               Logout
             </Button>
@@ -233,30 +252,36 @@ const Dashboard = () => {
 
         {/* Stats Cards */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <Card className="p-6 border-2 border-primary/30 hover:border-primary transition-colors">
+          <Card className="p-6 border-2 border-primary/30 hover:border-primary transition-all duration-300 hover:scale-105 hover:shadow-neon backdrop-blur-xl bg-card/80 animate-fade-in" style={{ animationDelay: '0.1s' }}>
             <div className="flex items-center justify-between mb-4">
-              <Zap className="w-8 h-8 text-primary" />
-              <span className="text-2xl font-bold text-primary">{profile.token_balance.toLocaleString()}</span>
+              <Zap className="w-10 h-10 text-primary animate-sparkle" />
+              <span className="text-3xl font-bold text-primary">{profile.token_balance.toLocaleString()}</span>
             </div>
-            <h3 className="text-lg font-sans font-semibold mb-1">Tokens Remaining</h3>
+            <h3 className="text-lg font-sans font-semibold mb-1 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              Tokens Remaining
+            </h3>
             <p className="text-sm text-muted-foreground">Your AI generation budget</p>
           </Card>
 
-          <Card className="p-6 border-2 border-secondary/30 hover:border-secondary transition-colors">
+          <Card className="p-6 border-2 border-secondary/30 hover:border-secondary transition-all duration-300 hover:scale-105 hover:shadow-glow backdrop-blur-xl bg-card/80 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <div className="flex items-center justify-between mb-4">
-              <Code2 className="w-8 h-8 text-secondary" />
-              <span className="text-2xl font-bold text-secondary">{projects.length}</span>
+              <Code2 className="w-10 h-10 text-secondary animate-float" />
+              <span className="text-3xl font-bold text-secondary">{projects.length}</span>
             </div>
-            <h3 className="text-lg font-sans font-semibold mb-1">Projects</h3>
+            <h3 className="text-lg font-sans font-semibold mb-1 bg-gradient-to-r from-secondary to-secondary/70 bg-clip-text text-transparent">
+              Projects
+            </h3>
             <p className="text-sm text-muted-foreground">Active sandboxed builds</p>
           </Card>
 
-          <Card className="p-6 border-2 border-accent/30 hover:border-accent transition-colors">
+          <Card className="p-6 border-2 border-accent/30 hover:border-accent transition-all duration-300 hover:scale-105 hover:shadow-corrupt backdrop-blur-xl bg-card/80 animate-fade-in" style={{ animationDelay: '0.3s' }}>
             <div className="flex items-center justify-between mb-4">
-              <Crown className="w-8 h-8 text-accent" />
-              <span className="text-sm font-bold text-accent uppercase">{profile.plan}</span>
+              <Crown className="w-10 h-10 text-accent animate-sparkle" style={{ animationDelay: '0.5s' }} />
+              <span className="text-sm font-bold text-accent uppercase tracking-wider">{profile.plan}</span>
             </div>
-            <h3 className="text-lg font-sans font-semibold mb-1">Plan Status</h3>
+            <h3 className="text-lg font-sans font-semibold mb-1 bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">
+              Plan Status
+            </h3>
             <p className="text-sm text-muted-foreground">
               {profile.plan === 'free' ? 'Upgrade for more features' : 'Premium active'}
             </p>
@@ -264,17 +289,19 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <Card className="p-8 border-2 border-border neon-border mb-8">
-          <h2 className="text-2xl font-bold font-sans mb-6">Quick Actions</h2>
+        <Card className="p-8 border-2 border-border neon-border mb-8 backdrop-blur-xl bg-card/80 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+          <h2 className="text-3xl font-bold font-sans mb-6 bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
+            Quick Actions
+          </h2>
           
           <div className="grid md:grid-cols-2 gap-4">
             <Dialog>
               <DialogTrigger asChild>
                 <Button
                   size="lg"
-                  className="w-full h-24 text-lg bg-primary hover:bg-primary/90 font-sans"
+                  className="w-full h-24 text-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 font-sans transition-all hover:scale-105 hover:shadow-neon"
                 >
-                  <Code2 className="w-6 h-6 mr-3" />
+                  <Code2 className="w-6 h-6 mr-3 animate-float" />
                   Create New Project
                 </Button>
               </DialogTrigger>
@@ -329,9 +356,9 @@ const Dashboard = () => {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="w-full h-24 text-lg border-2 border-secondary hover:bg-secondary/10 font-sans"
+                  className="w-full h-24 text-lg border-2 border-secondary hover:bg-secondary/20 hover:border-secondary font-sans transition-all hover:scale-105 hover:shadow-glow"
                 >
-                  <Crown className="w-6 h-6 mr-3" />
+                  <Crown className="w-6 h-6 mr-3 animate-sparkle" />
                   Redeem Premium Key
                 </Button>
               </DialogTrigger>
@@ -366,20 +393,20 @@ const Dashboard = () => {
             <Button
               size="lg"
               variant="outline"
-              className="w-full h-24 text-lg border-2 border-accent hover:bg-accent/10 font-sans"
+              className="w-full h-24 text-lg border-2 border-accent hover:bg-accent/20 hover:border-accent font-sans transition-all hover:scale-105 hover:shadow-corrupt"
               onClick={() => navigate("/docs")}
             >
-              <Sparkles className="w-6 h-6 mr-3" />
+              <Sparkles className="w-6 h-6 mr-3 animate-sparkle" style={{ animationDelay: '1s' }} />
               Browse Documentation
             </Button>
 
             <Button
               size="lg"
               variant="outline"
-              className="w-full h-24 text-lg border-2 border-border hover:bg-muted font-sans"
+              className="w-full h-24 text-lg border-2 border-border hover:bg-muted hover:border-muted font-sans transition-all hover:scale-105"
               onClick={() => toast.info("Settings coming soon!")}
             >
-              <Settings className="w-6 h-6 mr-3" />
+              <Settings className="w-6 h-6 mr-3 animate-float" />
               Account Settings
             </Button>
           </div>
@@ -387,23 +414,26 @@ const Dashboard = () => {
 
         {/* Projects List */}
         {projects.length > 0 && (
-          <Card className="p-6 border-2 border-border">
-            <h2 className="text-2xl font-bold font-sans mb-4">Your Projects</h2>
+          <Card className="p-6 border-2 border-border backdrop-blur-xl bg-card/80 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+            <h2 className="text-3xl font-bold font-sans mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              Your Projects
+            </h2>
             <div className="space-y-3">
-              {projects.map((project) => (
+              {projects.map((project, index) => (
                 <div
                   key={project.id}
-                  className="p-4 bg-card/50 rounded-lg border border-border hover:border-primary transition-colors"
+                  className="p-4 bg-card/50 rounded-lg border border-border hover:border-primary transition-all duration-300 hover:scale-102 hover:shadow-neon cursor-pointer backdrop-blur-sm animate-fade-in"
+                  style={{ animationDelay: `${0.6 + index * 0.1}s` }}
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-bold text-lg">{project.name}</h3>
+                      <h3 className="font-bold text-lg hover:text-primary transition-colors">{project.name}</h3>
                       <p className="text-sm text-muted-foreground mt-1">{project.description}</p>
                     </div>
-                    <span className={`text-xs px-3 py-1 rounded-full ${
-                      project.deploy_status === 'live' ? 'bg-secondary/20 text-secondary' :
-                      project.deploy_status === 'error' ? 'bg-destructive/20 text-destructive' :
-                      'bg-muted text-muted-foreground'
+                    <span className={`text-xs px-3 py-1 rounded-full font-semibold transition-all ${
+                      project.deploy_status === 'live' ? 'bg-secondary/20 text-secondary border border-secondary/30 animate-neon-pulse' :
+                      project.deploy_status === 'error' ? 'bg-destructive/20 text-destructive border border-destructive/30' :
+                      'bg-muted text-muted-foreground border border-border'
                     }`}>
                       {project.deploy_status}
                     </span>

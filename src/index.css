@@ -95,12 +95,34 @@ All colors MUST be HSL.
   /* Sparkle animation */
   @keyframes sparkle {
     0%, 100% {
-      opacity: 0;
-      transform: scale(0);
+      opacity: 0.4;
+      transform: scale(0.8) rotate(0deg);
     }
     50% {
       opacity: 1;
-      transform: scale(1);
+      transform: scale(1.2) rotate(180deg);
+    }
+  }
+
+  /* Fade in animation */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Float animation */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-15px);
     }
   }
 
@@ -126,5 +148,39 @@ All colors MUST be HSL.
     border: 2px solid hsl(var(--primary));
     box-shadow: var(--shadow-neon);
     animation: neon-pulse 2s ease-in-out infinite;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.6s ease-out forwards;
+    opacity: 0;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-neon-pulse {
+    animation: neon-pulse 2s ease-in-out infinite;
+  }
+
+  .shadow-neon {
+    box-shadow: var(--shadow-neon);
+  }
+
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .shadow-corrupt {
+    box-shadow: var(--shadow-corrupt);
+  }
+
+  .hover\:scale-102:hover {
+    transform: scale(1.02);
+  }
+
+  /* Smooth transitions for all interactive elements */
+  button, a, .card {
+    transition: var(--transition-glitch);
   }
 }
